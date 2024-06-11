@@ -1,0 +1,128 @@
+== Наследование классов и абстрактные классы
+
+link:https://kotlinlang.org/docs/inheritance.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs014_class_inheritance/ClassesInheritance2.kt[ClassesInheritance2.kt]
+
+=== 1. Введение. Супертип Any. Keyword 'open'
+
+Все классы в Kotlin имеют общий суперкласс *_Any_*, который является суперклассом по умолчанию для класса без объявленных супертипов:
+[source, kotlin]
+----
+class Example // Implicitly inherits from Any
+----
+
+*_Any_* имеет три метода: `equals()`, `hashCode()`, и `toString()`. Таким образом, эти методы определены для всех классов Kotlin. Для *_data классов_*, кстати, эти методы работают как lombok.
+
+По умолчанию классы Kotlin являются финальными и не могут быть расширены. Чтобы сделать класс наследуемым, нужно пометить его ключевым словом `open`. К слову, методы тоже являются финальными по дефолту и к ним также применим `open`. Чтобы наследовать класс, достаточно поместить его после объявления дочернего класса через двоеточие:
+[source, kotlin]
+----
+open class Base(p: Int)
+
+class Derived(p: Int) : Base(p)
+----
+
+В листинге выше видно, что вызывается конструктор класса *_Base_*. Если производный класс имеет основной конструктор, базовый класс должен инициализироваться в этом первичном конструкторе в соответствии с его параметрами. +
+Если же производный класс имеет только дополнительные конструкторы, каждый вызов дополнительного конструктора должен инициализировать базовый класс с помощью ключевого слова `open`. В этом случае разные дополнительные конструкторы дочернего класса могут вызывать разные конструкторы родительского класса:
+[source, kotlin]
+----
+class MyView : View {
+    constructor(ctx: Context) : super(ctx)
+
+    constructor(ctx: Context, attrs: AttrSet) : super(ctx, attrs)
+}
+----
+
+=== 2. Переопределение методов класса
+
+Kotlin требует явных модификаторов для переопределяемых методов:
+[source, kotlin]
+----
+open class Shape {
+    open fun draw() { /*...*/ }
+    fun fill() { /*...*/ }
+}
+
+class Circle : Shape() {
+    override fun draw() { /*...*/ }
+    // нельзя объявить метод 'fun fill()'
+}
+----
+
+Модификатор `override` необходим для переопределяемого метода *_Circle.draw()_*. Если метод не *_open_*, объявление метода с той же сигнатурой в подклассе не допускается. Очевидно, что если сам класс не отмечен модификатором open, он не оказывает никакого эффекта при добавлении к членам финального класса.
+
+Метод, отмеченный override сам по себе является открытым, поэтому его можно переопределить в подклассах. Если нужно запретить повторное переопределение, используйте `final`:
+[source, kotlin]
+----
+open class Rectangle() : Shape() {
+    final override fun draw() { /*...*/ }
+}
+----
+
+=== 3. Переопределение свойств класса
+
+Механизм переопределения работает со свойствами так же, как и с методами. Свойства, переобъявляемые в дочернем классе, должны быть open и быть помечены override. Каждое объявленное свойство может быть переопределено:
+
+- 1. Свойством с инициализатором (*_vertexCount_*, *_color_*)
+- 2. *_Val_*-свойство может переопределить get-метод (*_linesCount_*)
+- 3. *_Var_*-свойство может переопределить get и set-методы (*_edgesCount_*)
+
+К слову, можно переопределить *_val_*-свойство *_var_*-свойством (*_edgesCount_*), но не наоборот. Это разрешено, поскольку val объявляет только getter, а его var-переопределение дополнительно объявляет setter в дочернем классе классе. В обратную же сторону - val не дает объявить сеттер, который уже есть в родительском классе.
+
+[source, kotlin]
+----
+abstract class Shape {
+    open val vertexCount: Int = 0
+    open val linesCount: Int = 0
+    open val edgesCount: Int = 0
+    open var color: String = "Blank"
+}
+
+class Rectangle : Shape() {
+    override val vertexCount = 4 // переопределен инициализатор - 4
+    override val linesCount: Int // свойство val с get-методом
+        get() = super.linesCount // инициализируется в базовом классе
+
+    // используется инициализатор из супер класса - 0
+    override var edgesCount: Int // переопределение val на var
+        get() = super.edgesCount // для var нужны и get и set методы
+        set(value) {}
+
+    override var color: String = "White"
+}
+----
+
+=== 4. Вызов реализации суперкласса
+
+Вызов исходного метода происходит через ключевое слово `super`:
+
+[source, kotlin]
+----
+open class Rectangle {
+    open fun draw() { println("Drawing a rectangle") }
+}
+
+class FilledRectangle : Rectangle() {
+    override fun draw() {
+        super.draw()
+        println("Filling the rectangle")
+    }
+}
+----
+
+=== 5. Абстрактные классы
+
+Класс может быть объявлен `abstract` вместе с некоторыми или всеми его членами. Абстрактный член не имеет реализации в своем классе. Вам не нужно аннотировать абстрактные классы или функции с помощью open:
+
+[source, kotlin]
+----
+abstract class Shape {
+    open val vertexCount: Int = 0
+    open val linesCount: Int = 0
+    open val edgesCount: Int = 0
+    open var color: String = "Blank"
+    abstract var lineThickness: UInt // абстрактная пропертя
+
+    abstract fun fill() // абстрактный метод
+}
+----

@@ -1,0 +1,66 @@
+== Enum class
+
+link:https://kotlinlang.org/docs/enum-classes.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs024_enum_classes/EnumsSample.kt[EnumsSample.kt]
+
+=== 1. Введение
+
+Самый простой вариант использования классов перечислений — это реализация типобезопасных перечислений:
+[source, kotlin]
+----
+enum class Direction {
+    NORTH, SOUTH, WEST, EAST
+}
+----
+
+Каждая константа перечисления является объектом. Константы перечисления разделяются запятыми. Поскольку каждое перечисление является экземпляром класса перечисления, его можно инициализировать как:
+[source, kotlin]
+----
+enum class Color(val rgb: Int) {
+    RED(0xFF0000),
+    GREEN(0x00FF00),
+    BLUE(0x0000FF)
+}
+----
+
+=== 2. Анонимные классы и enum
+
+Константы перечисления могут объявлять свои собственные анонимные классы с соответствующими методами, а также с переопределением базовых методов.
+[source, kotlin]
+----
+enum class ProtocolState {
+    WAITING {
+        override fun signal() = TALKING
+        override fun isActive() = false
+    },
+
+    TALKING {
+        override fun signal() = WAITING
+        // дефолтное поведение isActive()
+    };
+
+    abstract fun signal(): ProtocolState
+    open fun isActive() = true
+}
+----
+
+=== 3. Реализация интерфейсов в классах перечислений
+
+Класс enum может реализовывать интерфейс (но не может быть производным от класса), предоставляя либо общую реализацию членов интерфейса для всех записей, либо отдельные реализации для каждой записи внутри своего анонимного класса. Это делается путем добавления интерфейсов, которые вы хотите реализовать, в объявление класса перечисления следующим образом:
+[source, kotlin]
+----
+enum class IntArithmetics :
+    BinaryOperator<Int>, IntBinaryOperator {
+
+    PLUS {
+        override fun apply(t: Int, u: Int): Int = t + u
+    },
+    TIMES {
+        override fun apply(t: Int, u: Int): Int = t * u
+    };
+
+    // функция из IntBinaryOperator
+    override fun applyAsInt(t: Int, u: Int) = apply(t, u)
+}
+----

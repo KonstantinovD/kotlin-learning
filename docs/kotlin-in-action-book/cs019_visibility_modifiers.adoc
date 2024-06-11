@@ -1,0 +1,77 @@
+== Модификаторы видимости
+
+link:https://kotlinlang.org/docs/visibility-modifiers.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs019_visibility_modifiers/VisibilityModifiers.kt[VisibilityModifiers.kt]
+
+=== 1. Введение
+
+В Котлине есть четыре модификатора видимости: `private`, `protected`, `internal` и `public`. Видимость по умолчанию - *_public_*.
+
+=== 2. Пакеты. Объявления верхнего уровня (top-level declaration)
+
+Функции, свойства, классы, объекты и интерфейсы могут быть объявлены на "верхнем уровне" непосредственно внутри пакета:
+
+[source, kotlin]
+----
+// file name: example.kt
+package foo
+
+private fun foo() { /*...*/ } // visible inside example.kt
+
+public var bar: Int = 5 // property is visible everywhere
+    private set         // setter is visible only in example.kt
+
+internal val baz = 6    // visible inside the same module
+----
+
+
+- 1) *_private_* - доступно только внутри файла, содержащего объявление.
+- 2) Модификатор *_protected_* не используется для объявлений верхнего уровня.
+- 3) *_internal_* - доступно в рамках одного модуля
+- 4) *_public_* - по умолчанию - доступно везде.
+
+=== 3. Члены классов
+
+- 1) *_private_* - член виден только внутри этого класса (включая все его члены).
+- 2) *_protected_* - виден внутри класса и в подклассах
+- 3) *_internal_* - такие члены класса видны в рамках одного модуля
+- 4) *_public_* - по умолчанию - доступно везде.
+
+*NOTE!* В отличие от Java, в Котлине внешний класс не видит private-члены своих внутренних (inner) классов.
+
+Если вы переопределяете protected или internal члены и не указываете область видимости, область видимости наследуется от оригинала. При этом вы можете изменить область видимости на public с internal/protected:
+
+[source, kotlin]
+----
+open class Outer {
+    private val a = 1
+    protected open val b = 2
+    internal open val c = 3
+    val d = 4  // public by default
+
+    protected open var v1 = 5
+    internal open var v2 = 6
+
+    protected class Nested {
+        public val e: Int = 5
+    }
+}
+
+class Subclass : Outer() {
+    // a is not visible
+    // b, c and d are visible
+    // Nested and e are visible
+
+    override val b = 5   // 'b' is protected
+    override val c = 7   // 'c' is internal
+
+    // можно повышать уровень видимости до public (protected -> public)
+    public override var v1 = 70 // protected -> public
+    public override var v2 = 72
+    // нельзя менять с protected на internal и наоборот
+    // нельзя понижать уровень видимости
+    // private override var v2 = 70 // protected -> private - нельзя
+}
+----
+

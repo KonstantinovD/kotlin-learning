@@ -1,0 +1,49 @@
+== Функции в Kotlin
+
+link:https://kotlinlang.org/docs/functions.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs009_functions/Functions.kt[Functions.kt]
+
+- 1. Котлин допускает именованные аргументы (можно писать в рандомном порядке). Эта функция особенно полезна, когда функция имеет множество параметров со значениями по умолчанию, и вы хотите предоставить значение, отличное от значения по умолчанию, для параметра, который не является последним в списке:
+
+[source, kotlin]
+----
+fun greet(name: String, greeting: String = "Hello"): String {
+    return "$greeting, $name!"
+}
+
+val customGreeting = greet(greeting = "Welcome", name = "Bob")
+// val greeting2 = greet(greeting = "Bye") - нельзя, name не указано
+----
+
+- 2. Kotlin предоставляет более компактный синтаксис для функций с одним выражением, используя знак `=`. В этом случае вы можете опустить тип возвращаемого значения, если компилятор может его распознать:
+
+[source, kotlin]
+----
+fun multiplyNumbers(a: Int, b: Int) = a * b
+fun printNumbers(a: Int, b: Int) = println(a + b)
+----
+
+- 3. В Kotlin функции могут возвращать различные типы значений, указанные после имени функции и параметров. Тип возвращаемого значения можно ясно увидеть в сигнатуре функции. Однако если функция не возвращает никакого ценного значения, Kotlin предоставляет тип Unit, сравнимый с void в таких языках, как Java или C++. Нет необходимости указывать Unit в качестве типа возвращаемого значения, поскольку это тип возвращаемого значения по умолчанию, если ни один не объявлен:
+
+[source, kotlin]
+----
+fun sum(a: Int, b: Int): Int {
+    return a + b
+}
+
+fun printSum(a: Int, b: Int): Unit {
+    println("Sum is ${a + b}")
+}
+// is equivalent to
+fun printSum(a: Int, b: Int) {
+    println("Sum is ${a + b}")
+}
+----
+
+- 4. Функции могут быть параметризованы:
+
+[source, kotlin]
+----
+fun <T> singletonList(item: T): List<T> { /*...*/ }
+----

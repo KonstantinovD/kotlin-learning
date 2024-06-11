@@ -1,0 +1,142 @@
+== Расширения в Kotlin - особая конструкция
+
+link:https://kotlinlang.org/docs/extensions.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs020_extensions/ExtensionsSample.kt[ExtensionsSample.kt]
+
+=== 1. Введение
+
+Kotlin предоставляет возможность расширять класс или интерфейс новыми функциями без необходимости наследования от класса или использования шаблонов проектирования, таких как Decorator. Это делается с помощью специальных объявлений, называемых расширениями.
+
+Например, вы можете написать новые функции для класса или интерфейса из сторонней библиотеки, которые вы не сможете изменить. Такие функции можно вызывать обычным способом, как если бы они были методами исходного класса. Этот механизм называется *_extension function_* - функция расширения. Похожие функции нам уже встречались при изучении scope functions - *_See:_* link:cs018_scope_functions.adoc[cs018_scope_functions.adoc] +
+Существуют также свойства расширения, которые позволяют определять новые свойства для существующих классов.
+
+=== 2. Функции расширения
+
+Чтобы объявить функцию расширения, добавьте к ее имени префикс расширяемого типа:
+
+[source, kotlin]
+----
+fun MutableList<Int>.negate() = this.replaceAll { if (it > 0) -it else it }
+
+fun <T> MutableList<T>.swap(index1: Int, index2: Int) {
+    val tmp = this[index1] // 'this' corresponds to the list
+    this[index1] = this[index2]
+    this[index2] = tmp
+}
+
+fun main() {
+    val intList = mutableListOf(1, -2, 3, 4, 0)
+    // 'this' inside 'swap()' will hold the value of 'list'
+    intList.swap(0, 2)
+    intList.negate() // только для Int
+
+    val strList = mutableListOf("Hello", "World")
+    strList.swap(0, 1)
+}
+----
+
+=== 3. Nullable receiver
+
+Можно написать extension функцию для nullable-объекта класса. Например, так работает функция toString():
+
+[source, kotlin]
+----
+fun Any?.toString(): String {
+    if (this == null) return "null"
+    // After the null check, 'this' is autocast to a non-nullable type, so the toString() below
+    // resolves to the member function of the Any class
+    return toString()
+}
+----
+
+=== 4. Extension properties (расширение пропертей)
+
+Kotlin поддерживает расширение пропертей так же, как и функции. Однако для свойств расширения не разрешены инициализаторы, поскольку при расширении свойства мы не можем добавить backing field в класс. Их поведение можно определить только путем явного указания геттеров/сеттеров. По факту, получается пропертя, зависящая от значения других пропертей:
+
+[source, kotlin]
+----
+val <T> List<T>.lastIndex: Int
+    get() = size - 1
+
+// val House.number = 1
+// error: initializers are not allowed
+// for extension properties
+----
+
+=== 5. Extension functions внутри классов
+
+Вы можете объявить расширения для одного класса внутри другого класса. Тогда первый класс будет называться *_extension receiver_*, а второй - *_dispatch receiver_*. В этом случае extension function будет видна только внутри второго класса и вызвать ее извне не получится. +
+Между тем, на примере функции *_toString()_* можно показать, что в случае конфликта имен между членами extension receiver и dispatch receiver, extension receiver имеет приоритет. Для вызовы члена dispatch receiver нужно использовать конструкцию `this@Connection.toString()`:
+[source, kotlin]
+----
+class Host(val hostname: String) {
+    fun printHostname() { print(hostname) }
+}
+
+class Connection(val host: Host, val port: Int) {
+    fun printPort() { print(port) }
+
+    fun Host.printConnectionString() {
+        printHostname()   // calls Host.printHostname()
+        print(":")
+        printPort()   // calls Connection.printPort()
+        println()
+
+        // calls Host.toString() - приоритет имеет расширяемый класс
+        println(toString()) // common.cs020_extensions.Host@506e1b77
+        // calls Connection.toString() - явный вызов метода класса,
+        //  владеющего расширяемым классом
+        println(this@Connection.toString()) // common.cs020_extensions.Connection@4fca772d
+    }
+
+    fun connect() {
+        /*...*/
+        host.printConnectionString()   // calls the extension function
+    }
+}
+----
+
+=== 6. Extension functions внутри классов и наследование
+
+Расширения, объявленные как члены, могут быть объявлены *_open_* и переопределены в подклассах. Это означает, что отправка таких функций является виртуальной по отношению к *_dispatch receiver_*, но статической по отношению к типу *_extension receiver_*:
+[source, kotlin]
+----
+open class Base { }
+class Derived : Base() { }
+
+open class BaseCaller {
+    open fun Base.printFunctionInfo() {
+        println("Base extension function in BaseCaller")
+    }
+
+    open fun Derived.printFunctionInfo() {
+        println("Derived extension function in BaseCaller")
+    }
+
+    fun call(b: Base) {
+        b.printFunctionInfo()   // call the extension function
+    }
+}
+
+class DerivedCaller: BaseCaller() {
+    override fun Base.printFunctionInfo() {
+        println("Base extension function in DerivedCaller")
+    }
+
+    override fun Derived.printFunctionInfo() {
+        println("Derived extension function in DerivedCaller")
+    }
+}
+
+fun main() {
+    // "Base extension function in BaseCaller"
+    BaseCaller().call(Base())
+    // "Base extension function in DerivedCaller" -
+    // dispatch receiver is resolved virtually
+    DerivedCaller().call(Base())
+    // "Base extension function in DerivedCaller" -
+    // extension receiver is resolved statically
+    DerivedCaller().call(Derived())
+}
+----

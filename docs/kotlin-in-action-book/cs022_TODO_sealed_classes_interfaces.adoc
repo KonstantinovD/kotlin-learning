@@ -1,0 +1,14 @@
+== Запечатанные классы и интерфейсы
+
+link:https://kotlinlang.org/docs/sealed-classes.html[kotlinlang.org], link:https://developer.alexanderklimov.ru/android/kotlin/sealed.php[alexanderklimov]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs022_sealed_classes_interfaces/SealedClassesInterfaces.kt[SealedClassesInterfaces.kt]
+
+=== 1. Введение
+
+Запечатанные классы и интерфейсы обеспечивают контролируемое наследование иерархий классов. +
+Все непосредственные (прямые наследники одним уровнем выше) подклассы запечатанного класса известны во время компиляции. Никакие другие подклассы не могут появляться за пределами модуля и пакета, внутри которых определен запечатанный  класс. +
+Та же логика применима к запечатанным интерфейсам и их реализациям: после компиляции модуля с запечатанным интерфейсом новые реализации не могут быть созданы.
+
+
+

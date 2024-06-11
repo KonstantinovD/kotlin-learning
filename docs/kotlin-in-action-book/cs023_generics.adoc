@@ -1,0 +1,213 @@
+== Generics in Kotlin
+
+link:https://kotlinlang.org/docs/generics.html[kotlinlang.org], link:https://www.kotlinprimer.com/classes-what-we-know-from-java/generics/star-projections/[star-projections]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs023_generics/Generics.kt[Generics.kt]
+
+
+=== 1. Введение
+
+Классы в Kotlin могут иметь параметры типа, как и в Java:
+
+[source, kotlin]
+----
+class Box<T>(t: T) {
+    var value = t
+}
+
+val box: Box<Int> = Box<Int>(1)
+
+// если параметры можно вывести, например, из аргументов
+val box = Box(1) // конструктора, можно опустить аргументы типа
+----
+
+=== 2. Проблемы wildcards в Java
+
+link:https://blog.skillfactory.ru/glossary/dispersiya/[дисперсия]
+
+Одним из самых сложных аспектов системы типов Java являются подстановочные типы. У Котлина их нет. Вместо этого в Котлине есть дисперсия декларации и прогнозы типов, реализуемые ключевыми словами *_in_*/*_out_*.
+
+В Java есть wildcards со своей системой PECS (<? extends String>, <T super Integer>). Но концепция wildcards имеет определенные проблемы. +
+Предположим, что есть некоторый общий интерфейс Source, который предоставляет какие-то данные. Тогда я не смогу присвоить результат этого (параметризованного типом String) интерфейса переменной с типом этого же интерфейса, параметризованным Object. Вместо этого я вынужден использовать wildcards - но это, напротив, снимает ограничения - я могу передать в метод Source<Integer>, например:
+[source, java]
+----
+// Java
+interface Source<T> {
+    T nextT();
+}
+
+void demoError(Source<String> strs) {
+    // !!! Not allowed in Java
+    Source<Object> objects = strs;
+    // ...
+}
+
+void demoCorrect(Source<? extends Object> strs) {
+    // Можно сделать только так, это не меняет сути процессов,
+    // но делает код менее безопасным - я могу передать в метод
+    // Source<Integer>, например
+    Source<Object> objects = strs;
+    // ...
+}
+----
+
+Можно поменять, конечно, сам интерфейс Source, но в целом это плохая практика - менять интерфейс ради метода:
+
+[source, java]
+----
+// Java
+interface Source<T extends Object> {
+    T nextT();
+}
+----
+
+=== 3. in/out вместо wildcards в Kotlin. Проверки in/out компилятором
+
+В Kotlin же есть способ объяснить компилятору, что мы ему передаем - producer (*_out_*) или consumer (*_in_*). При встрече этих ключевых слов компилятор проверяет, чтобы "in"-шаблоны стояли на *_in-позиции_*, а "out"-шаблоны - на *_out-позиции_*. Что такое вообще out/in-позиция? Приведем пример:
+[source, kotlin]
+----
+interface Source<out T> { // source - отдает
+    fun nextT(): T
+
+    // Нельзя, потому что тип T стоит на in-позиции,
+    // но объявлен как 'out'
+    fun setT(vl : T): Boolean // ERROR !!!
+}
+
+interface Comparable<in T> { // comparable - потребляет
+    operator fun compareTo(other: T): Int
+
+    // Нельзя, потому что тип T стоит на out-позиции,
+    // но объявлен как 'in'
+    fun getT() : T // ERROR !!!
+}
+----
+Очевидно, in-позиция это аргументы функции, out-позиция - возвращаемое значение.
+
+=== 4. Примеры in/out в Kotlin
+
+Перепишем наш пример с использованием out. Ключевое слово *_out_* говорит, что параметр всегда будет производим, но никогда не потребляем (всегда будет в return-части):
+[source, kotlin]
+----
+interface Source<out T> {
+    fun nextT(): T
+}
+
+fun demo(strs: Source<String>) {
+    // OK, потому что T это out-parameter
+    val objects: Source<Any> = strs
+}
+----
+
+Дополнительно, ключевое слово *_in_* говорит, что параметр всегда будет потребляем, но не производим (всегда будет в параметрах функции). Яркий пример этого - интерфейс Comparable:
+[source, kotlin]
+----
+interface Comparable<in T> {
+    operator fun compareTo(other: T): Int
+}
+
+fun demo(x: Comparable<Number>) {
+    x.compareTo(1.0) // 1.0 has type Double, which is a subtype of Number
+    // Thus, you can assign x to a variable of type Comparable<Double>
+    val y: Comparable<Double> = x // OK!
+}
+----
+
+=== 4. in/out в аргументах функции
+
+Мы также можем использовать in/out как ограничители типов в аргументах функций:
+[source, kotlin]
+----
+fun copy(from: Array<out Number>, to: Array<in Number>) {
+    for (i in from.indices) {
+        to[i] = from[i]
+
+// ERROR - expected type Nothing
+        from[i] = 12.0
+// ERROR - Type mismatch. Required: Number, Found: Any?
+        var temp : Number = to[i]
+    }
+}
+----
+
+=== 5. Upper bounds (верхняя граница) в generics
+
+Наиболее распространенным типом ограничения является верхняя граница, которая соответствует ключевому слову `extends` в Java:
+[source, kotlin]
+----
+fun <T : Comparable<T>> sort(list: List<T>) {  /*...*/ }
+----
+
+В данном примере видно, что T должен быть подтипом Comparable<T>, например, Comparable<Int>, но никак не Double или HashMap<Int, String>:
+[source, kotlin]
+----
+fun <T : Comparable<T>> sort(list: List<T>) {  /*...*/ }
+
+// OK. Int is a subtype of Comparable<Int>
+sort(listOf(1, 2, 3))
+
+// Error: HashMap<Int, String> is not a subtype
+// of Comparable<HashMap<Int, String>>
+sort(listOf(HashMap<Int, String>()))
+----
+
+Верхняя граница по умолчанию (если она не указана) равна `Any?`. +
+Внутри угловых скобок можно указать только одну верхнюю границу. Если для одного и того же параметра типа требуется более одной верхней границы, вам понадобится отдельное предложение `where`:
+[source, kotlin]
+----
+fun <T> copyIfGreater(ls: List<T>, border: T): List<String>
+    where T : CharSequence,
+          T : Comparable<T> {
+    return ls.filter { it > border }.map { it.toString() }
+}
+----
+
+=== 6. Star-projections
+
+*_See:_* link:https://www.kotlinprimer.com/classes-what-we-know-from-java/generics/star-projections/[star-projections]
+
+При работе с универсальным типом, где вы ничего не знаете о параметре типа, у вас нет другого выбора, кроме как проецировать наиболее общий (ковариантный тип) или наиболее конкретный (контравариантный тип) возможный вариант:
+[source, kotlin]
+----
+class CovariantBlackbox<out T>(val contents: T)
+class ContravariantComparator<in T>(val comparisonDef: (T, T) -> Int)
+
+fun doStuff() {
+    var boxOfAnything: CovariantBlackbox<out Any?> = CovariantBlackbox(1)
+    boxOfAnything = CovariantBlackbox("abc")
+
+    var comparatorOfAnything: ContravariantComparator<in Nothing> =
+    ContravariantComparator<Int> { left, right -> left - right }
+
+    comparatorOfAnything =
+    ContravariantComparator<String> { left, right -> left.length - right.length }
+}
+----
+
+Звездные проекции позволяют сделать все более простым. Вместо того, чтобы писать `out Any?` или `in Nothing`, вы можете просто написать *_*_*.
+[source, kotlin]
+----
+fun doStuff() {
+    var boxOfAnything2: CovariantBlackbox<*> = CovariantBlackbox(1)
+    boxOfAnything2 = CovariantBlackbox("abc")
+
+    var comparatorOfAnything2: ContravariantComparator<*> =
+    ContravariantComparator<Int> { left, right -> left - right }
+    comparatorOfAnything2 =
+    ContravariantComparator<String> { left, right -> left.length - right.length }
+}
+----
+
+Естественно, если параметр универсального типа имеет явную верхнюю границу (т. е. что-то более конкретное, чем  `Any?`), эта граница используется вместо `Any?`.
+
+Оператор <*> почти эквивалентен неограниченному wildcard в Java (<?>), с той лишь разницей, что в случае `in Nothing` вы не можете ничего передать (помните, что Nothing это тип, который не имеет значения). В Java вы всегда можете передать `null`.
+
+=== 7. Проверки и приведения типов дженериков
+
+Из-за стирания типа не существует общего способа проверить, был ли создан экземпляр универсального типа с определенными аргументами типа во время выполнения, и компилятор запрещает такие isпроверки, такие как `ints is List<Int>` или _list is T_(параметр типа). Однако вы можете проверить экземпляр на соответствие звездообразному типу:
+[source, kotlin]
+----
+if (something is List<*>) {
+    something.forEach { println(it) } // The items are typed as `Any?`
+}
+----

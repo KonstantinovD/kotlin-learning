@@ -1,0 +1,124 @@
+== Object expressions
+
+link:https://kotlinlang.org/docs/object-declarations.html[kotlinlang.org], link:https://developer.alexanderklimov.ru/android/kotlin/object.php[alexanderklimov]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs026_object_expressions/ObjectExpressions.kt[ObjectExpressions.kt]
+
+=== 1. Введение
+
+Иногда вам необходимо создать объект, представляющий собой небольшую модификацию какого-либо класса, без явного объявления для него нового подкласса. Kotlin предоставляет для этого *_object expressions_* и *_object declarations_*.
+
+Разница в инициализации между *_object expressions_*/*_object declarations_*/*_companion objects_* следующая:
+
+- Object expressions выполняются (и инициализируются) сразу же там, где они используются.
+- Object declarations инициализируются лениво при первом обращении к ним.
+- Companion object инициализируется, когда загружается соответствующий класс (that matches the semantics of a Java static initializer).
+
+=== 2. Object expressions. Создание анонимных объектов с нуля
+
+*_Object expressions_* создают *`анонимные объекты`* *_анонимных классов_*, которые полезны для одноразового использования. Вы можете определить их с нуля, наследовать существующие классы или реализовать интерфейсы. Экземпляры анонимных классов - *_анонимные объекты_* - определяются выражением, а не именем.
+
+Если вам просто нужен объект, не имеющий нетривиальных супертипов, объявите его члены в фигурных скобках после ключевого слова *_object_*. Если тип не наследуется от суперкласса, то он имеет тип Any:
+[source, kotlin]
+----
+val helloWorld = object {
+    val hello = "Hello"
+    val world = "World"
+    // object expressions extend Any, so
+    // `override` is required on `toString()`
+    override fun toString() = "$hello $world"
+}
+// helloWorld has type 'Any'
+print(helloWorld)
+----
+
+=== 3. Object expressions. Наследование анонимных объектов от суперклассов
+
+Чтобы создать объект анонимного класса, который наследуется от какого-либо типа (или типов), укажите этот тип после `object :`. Если у супертипа есть конструктор, передайте ему соответствующие параметры конструктора. Несколько супертипов можно указать в виде списка, разделенного запятыми после двоеточия:
+[source, kotlin]
+----
+open class Car(x: Int) {
+    public open var speed: Int = x
+    public open var seats: Int = 4
+    fun printInfo() = println("Car speed: $speed, seats num: $seats")
+}
+
+interface Truck {
+    val liftingCapacity: Double // грузоподъемность
+}
+
+fun anonObjDerived() {
+    val bus = object : Car(0) {
+        override var seats = 24
+    }
+    bus.printInfo() // Car speed: 0, seats num: 24
+    bus.speed = 15
+    bus.printInfo() // Car speed: 15, seats num: 24
+
+    val truck = object : Car(0), Truck {
+        override val liftingCapacity: Double = 1500.0
+        var filledCapacity: Double = 0.0
+        fun supply(amount : Double) {
+            if (amount < 0.0) {
+                println("Negative amount validation!")
+                return
+            }
+            var result = filledCapacity + amount;
+            if (result <= liftingCapacity) {
+                filledCapacity = result
+                println("Truck now lift $filledCapacity kg")
+            } else {
+                println("Truck cannot lift more than $liftingCapacity kg")
+            }
+        }
+    }
+    truck.speed = 20
+    truck.printInfo() // Car speed: 20, seats num: 4
+    truck.supply(700.0) // Truck now lift 700.0 kg
+    truck.supply(-2.0) // Negative amount validation!
+    truck.supply(567.0) // Truck now lift 1267.0 kg
+    truck.supply(900.0)//Truck cannot lift more than 1500.0 kg
+}
+----
+
+=== 4. Object expressions. Доступ к членам анонимных классов
+
+Есть две основных ситуации использования объектов анонимного класса:
+
+- 1) *_Локальная переменная_* или *_private и not inline функция или свойство_*. В этом случае все члены, объявленные в анонимном классе, доступны через эту переменную, функцию или свойство. Обычно это стандартное применение анонимных классов.
+- 2) Если функция или свойство является public или private inline, то она недоступна извне.
+
+[source, kotlin]
+----
+class Parking {
+    private fun callThePolice() = object: Car(100) {
+        val weapon: MutableList<String> =
+            mutableListOf("PM", "PP-19 Vityaz")
+    }
+
+    fun printPoliceInfo() {
+        val policeCar = callThePolice()
+        println("Police car has speed ${policeCar.speed} " +
+                "and is armoured with ${policeCar.weapon}")
+    }
+
+    fun getPoliceCar() : Car {
+        return callThePolice()
+    }
+}
+
+fun anonObjInternalPropsAccess() {
+    val parking = Parking()
+    parking.printPoliceInfo()
+    val policeCar = parking.getPoliceCar()
+    policeCar.weapon.clear() // ERROR - нет доступа к переменной weapon
+
+    val fireTruck = object: Car(70) {
+        var waterVolume: Int = 0
+    }
+    // Есть доступ к переменной weapon
+    fireTruck.waterVolume = 14
+    println("Fire truck water: ${fireTruck.waterVolume}")
+}
+----
+

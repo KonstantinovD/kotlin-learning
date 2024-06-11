@@ -1,0 +1,138 @@
+== Value Classes (Inline value classes)
+
+link:https://kotlinlang.org/docs/inline-classes.html[kotlinlang.org], link:https://developer.alexanderklimov.ru/android/kotlin/value.php[alexanderklimov]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs025_value_classes/ValueClasses.kt[ValueClasses.kt],
+link:../../kotlin-basics/src/main/kotlin/common/cs025_value_classes/ValueClassWrappers.ktt[ValueClassWrappers.kt]
+
+=== 1. Введение. @JvmInline
+
+Если у класса указать ключевое слово value, то будет создан класс с заданным типом. Это позволит избежать некоторых ошибок, которые может пропустить компилятор.
+
+Допустим, мы создадим класс кота с полями weight/length и случайно передали значение веса в длину а значение длины в вес:
+
+[source, kotlin]
+----
+class Cat(val name: String,
+           var weight: Double, var length: Double)
+
+fun main() {
+    // нормальный домашний кот
+    val cat1 = Cat("Murzik", 5.0, 70.0)
+    // кот весом 65 кг и длиной 4.8 см (meow)
+    val catMonster = Cat("Barsik", 65.0, 4.8)
+}
+----
+
+Чтобы избежать подобных ситуаций, в Kotlin 1.5 появились новые классы *_Value Classes_*. Вам нужно создать новый класс с ключевым словом `value` и аннотацией `@JvmInline`:
+[source, kotlin]
+----
+@JvmInline
+value class Weight(val value: Double)
+@JvmInline
+value class Length(val value: Double)
+
+class Cat(val name: String, // меняем тип переменных
+          var weight: Weight, var length: Length)
+
+fun main() {
+    // нормальный домашний кот
+    val cat1 = Cat("Murzik", Weight(5.0), Length(70.0))
+    // тоже нормальный домашний кот
+    val cat2 = Cat("Barsik", Weight(4.8), Length(65.0))
+}
+----
+Теперь вы не сможете использовать любые значения типа Double, вам придётся явно создать объект нужного класса.
+
+Встроенный класс должен иметь ровно дно свойство в основном конструкторе (и больше ничего). Во время выполнения экземпляры встроенного класса будут хранимы в памяти как это одно свойство.
+
+Встроенные классы поддерживают некоторые функции обычных классов. В частности, им разрешено объявлять свойства и функции, иметь init-блок и вторичные конструкторы. Свойства встроенного класса не могут иметь резервных полей. Они могут иметь только простые вычислимые свойства (без lateinit/делегированных свойств).
+
+=== 2. Производительность
+
+Зачем использовать value classes, если можно просто создать обертку? Дело в том, что Использование value classes не оказывает сильной нагрузки на ресурсы, класс достаточно легковесный. Кроме того, если заключать в класс-обертку примитивный тип, то снижение производительности будет значительным, поскольку примитивные типы обычно сильно оптимизируются во время выполнения, а их wrappers не подвергаются какой-либо специальной обработке. Поэтому для тех же примитивов лучше использовать именно value classes.
+
+=== 3. Наследование
+
+Value classes могут расширять только интерфейсы. Они не могут расширять другие классы или быть родителями других классов - value classes всегда final.
+[source, kotlin]
+----
+interface Printable {
+    fun prettyPrint(): String
+}
+
+@JvmInline
+value class Name(val s: String) : Printable {
+    override fun prettyPrint(): String = "Let's $s!"
+}
+
+fun main() {
+    val name = Name("Kotlin")
+    println(name.prettyPrint()) // Still called as a static method
+}
+----
+
+=== 4. Упаковка и распаковка value classes
+
+Компилятор Kotlin хранит *_wrapper_* для каждого value class. Экземпляры value class могут быть представлены в рантайме либо как wrapper, либо как базовый тип. Это похоже на то, как `Int` можно представить либо как примитив `int`, либо как wrapper `Integer`. +
+Компилятор Kotlin предпочитает использовать базовые типы вместо wrapper-ов для оптимизации. Однако иногда приходится использовать и wrapper-ы. Как правило, value classes упаковываются всякий раз, когда они используются как другой тип.
+[source, kotlin]
+----
+interface I
+
+@JvmInline
+value class Foo(val i: Int) : I
+
+fun asInline(f: Foo) {}
+fun <T> asGeneric(x: T) {}
+fun asInterface(i: I) {}
+fun asNullable(i: Foo?) {}
+fun <T> id(x: T): T = x
+
+fun main() {
+    val f = Foo(42)
+
+    asInline(f)    // unboxed: used as Foo itself
+    asGeneric(f)   // boxed: used as generic type T
+    asInterface(f) // boxed: used as type I
+    asNullable(f)  // boxed: used as Foo?, which is different from Foo
+
+    // Изначально 'f' упаковывается, когда передается в функцию 'id()',
+    // а затем распаковывается при возвращении результата из функции.
+    // В конце концов 'c' содержит raw-значение (просто '42'), как и 'f'
+    val c = id(f)
+}
+----
+
+
+=== 5. Искажение функций
+
+Поскольку встроенные классы компилируются в базовый тип, это может привести к различным непонятным ошибкам, например, к неожиданным конфликтам сигнатур:
+
+[source, kotlin]
+----
+@JvmInline
+value class UInt(val x: Int)
+
+// Represented on the JVM as
+// 'public final void compute(int x)'
+fun compute(x: Int) { }
+
+// Also represented on the JVM as
+// 'public final void compute(int x)'
+fun compute(x: UInt) { }
+----
+
+Чтобы решить такие проблемы, функции, использующие встроенные классы, искажаются путем *_добавления к имени функции стабильного хеш-кода_*. Поэтому `fun compute(x: UInt)` будет представлено как `public final void compute-<hashcode>(int x)`, что решает проблему коллизий.
+
+Вы можете вызывать функции, которые принимают встроенные классы из кода Java. Для этого вам следует вручную отключить искажение через аннотацию @JvmName перед объявлением функции:
+[source, kotlin]
+----
+@JvmInline
+value class UInt(val x: Int)
+
+fun compute(x: Int) { }
+
+@JvmName("computeUInt")
+fun compute(x: UInt) { }
+----

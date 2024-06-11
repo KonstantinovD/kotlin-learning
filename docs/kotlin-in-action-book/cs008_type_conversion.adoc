@@ -1,0 +1,65 @@
+== Конвертация типов в Kotlin
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs008_type_conversion/TypeConversion.kt[TypeConversion.kt]
+
+=== 1. Конвертация типов
+
+Kotlin работает так же, как и Java - допускает преобразования от меньшего типа к большему (Int в Long), но не наоборот:
+
+[source, kotlin]
+----
+val longValue: Long = 100L
+val intValue: Int = 200
+val newLongValue = intValue
+
+// val intValue: Int = longValue // Error: Type mismatch
+val newIntValue: Int = longValue.toInt()
+----
+
+Вместе с этим преобразование типов происходит необычным образом - через функции `toInt()`,`toLong()`,`toFloat()`,`toDouble()`,`toByte()`,`toShort()`,`toString()`:
+
+[source, kotlin]
+----
+val newIntValue: Int = longValue.toInt()
+val stringValue = newIntValue.toString()
+val floatValue1 = longValue.toFloat()
+val floatValue2 = stringValue.toFloat()
+----
+
+Любой из этих методов можно вызвать для переменной, чтобы преобразовать ее к желаемому типу. Если преобразуемое значение выходит за пределы диапазона целевого типа, это может привести к потере или усечению данных.
+
+=== 2. Type Conversion Best Practices in Kotlin
+
+- 1. Проверяйте значения на null
+[source, kotlin]
+----
+val s: String? = null
+val i: Int? = s?.toInt()
+----
+
+- 2. При преобразовании из String в числовой тип обрабатывайте потенциальное NumberFormatException
+[source, kotlin]
+----
+val s: String = "abc"
+val i: Int? = try { s.toInt() } catch (e: NumberFormatException) { null }
+----
+
+- 3. Используйте проверки типов и Smart Casts - оператор `is` и `!is`
+[source, kotlin]
+----
+if (obj is String) {
+    println(obj.length)
+}
+if (obj is Number) {
+    println("Number: $obj")
+}
+----
+
+- 4. Используйте оператор безопасного приведения типов `as?`. Если что-то пойдет не так, оператор вернет null. Если использовать небезопасный оператор `as` выдаст исключение, если тип нельзя привести (например, null нельзя привести к String).
+[source, kotlin]
+----
+val s = if (Random.nextBoolean()) 14 else "14"
+val i: Int? = s as? Int
+println("Safe-casted int: $i")
+----
+

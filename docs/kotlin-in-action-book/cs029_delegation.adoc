@@ -1,0 +1,79 @@
+== Delegation. Делегированные свойства
+
+link:https://kotlinlang.org/docs/delegation.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs028_companion_objects/CompanionObjects.kt[CompanionObjects.kt]
+
+=== 1. Шаблон делегации в Kotlin
+
+Шаблон делегирования оказался хорошей альтернативой наследованию реализации, и Kotlin поддерживает его изначально, не требуя никакого шаблонного кода.
+
+Например, класс Tank может реализовать интерфейс Gun, делегируя все полномочия по обращению с орудием классу GunImpl:
+
+[source, kotlin]
+----
+interface Gun {
+    fun fire()
+    fun reload()
+}
+
+class GunImpl(var shell: String) : Gun {
+    override fun fire() =
+        println("Fire from gun with $shell shell")
+
+    override fun reload() = println("Reload in 10 seconds")
+}
+
+class Tank(gun: Gun) : Gun by gun {
+    override fun reload() = println("Reload in 14 seconds " +
+            "from tank ammunition rack")
+}
+
+fun main() {
+    val atGun = GunImpl("HE")
+    atGun.fire()   // 'Fire from gun with HE shell'
+    atGun.reload() // 'Reload in 10 seconds'
+
+    val tankGun = GunImpl("AP")
+    val tank = Tank(tankGun)
+    tank.fire()   // Fire from gun with AP shell
+    tankGun.shell = "APC"
+    tank.reload() // Reload in 14 seconds from tank...
+    tank.fire()   // Fire from gun with APC shell
+}
+----
+
+Обратите внимание, что проперти, переопределенные в классе, который делегирует полномочия, не будут использованы в глассе-делегате - он будет использовать свою внутреннюю реализацию:
+
+[source, kotlin]
+----
+interface Engine{
+    var hp: Double
+    fun start()
+}
+
+class BaseEngine() : Engine {
+    override var hp = 67.0
+    override fun start() {
+        println("Запуск двигателя с мощностью $hp лс")
+    }
+}
+
+class Truck(e: Engine) : Engine by e {
+    // не окажет влияние на мощность двигателя
+    override var hp = 240.0
+}
+
+fun main() {
+    var engine = BaseEngine()
+    engine.start() // 'Запуск двигателя с мощностью 67.0 лс'
+
+    var truckEngine = BaseEngine()
+    var truck = Truck(truckEngine)
+    truck.start() // 'Запуск двигателя с мощностью 67.0 лс'
+    truck.hp = 300.0 // не влияет на 'hp' в 'BaseEngine'
+    truck.start() // 'Запуск двигателя с мощностью 67.0 лс'
+    truckEngine.hp = 280.0
+    truck.start() // 'Запуск двигателя с мощностью 280.0 лс'
+}
+----

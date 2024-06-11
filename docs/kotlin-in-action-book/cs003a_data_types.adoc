@@ -1,0 +1,53 @@
+== Типы данных в Kotlin
+
+=== 1. Типы переменных
+
+Тип переменной устанавливается при ее объявлении - явно или неявно:
+[source, kotlin]
+----
+val text: String = "Hello"
+val m: Int = 1
+
+val phrase = "I am studying Kotlin now"
+val n = 2
+----
+*NOTE!* Имя типа всегда начинается с заглавной буквы.
+
+Мы можем использовать оба объявления - явный и неявный. Неявный делает код лаконичнее, но иногда мы не обойдемся без явного объявления типа - например, если нам надо объявить переменную и присвоить ей значение позже.
+[source, kotlin]
+----
+val greeting // error
+val phrase: String // ok
+greeting = "hello"
+phrase = "kotlin"
+----
+
+=== 2. Числа
+
+Котлин предоставляет несколько типов целых и дробных чисел.
+
+Целые числа (0, 1, 2,...) представлены следующими четырьмя типами: *_Long_*, *_Int_*, *_Short_*, *_Byte_* - аналогичные Java
+
+Типы с плавающей запятой - *_Float_* и *_Double_*
+
+[source, kotlin]
+----
+val shortNumber: Short = 15
+val byteNumber: Byte = 15
+val twoMillion = 2_000_000L
+
+val pi = 3.1415
+val e = 2.71828f
+val fraction: Float = 1.51f
+----
+
+Кроме того, существуют беззнаковые (unsigned) числа - `UByte`, `UShort`, `UInt`, `ULong`
+[source, kotlin]
+----
+val uByte: UByte = 5u
+val uShort: UShort = 10U
+val smallSize = 100u // UInt by default
+val smallLong = 10uL
+// ULong because the number doesn't fit in UInt
+val bigSize = 5_000_000_000u
+----

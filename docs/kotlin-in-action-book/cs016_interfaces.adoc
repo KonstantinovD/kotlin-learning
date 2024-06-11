@@ -1,0 +1,39 @@
+== Interfaces
+
+link:https://kotlinlang.org/docs/interfaces.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs016_interfaces/InterfacesSample4.ktt[InterfacesSample4.kt]
+
+=== 1. Интерфейсы, их методы и проперти
+
+Интерфейсы в Kotlin могут содержать объявления абстрактных методов, а также реализации методов. Как и в абстрактных классах, методы в интерфейсах открытые. В отличие абстрактных классов, интерфейсы не могут хранить состояние (проперти). У них могут быть свойства, но они должны быть абстрактными или реализовывать геттеры. Свойства, объявленные в интерфейсах, не могут иметь backing fields, поэтому геттеры не могут ссылаться на backing fields:
+
+[source, kotlin]
+----
+interface MyInterface {
+    val prop: Int // abstract
+
+    val propertyWithImplementation: String
+        get() = "foo"
+
+    fun foo() { // не абстрактная
+        print(prop)
+    }
+
+    // абстрактная по дефолту как функция без тела
+    fun bar(str: String)
+}
+
+class Child : MyInterface {
+    override val prop: Int = 29
+    override fun bar(str: String) {
+        println("bar $str")
+    }
+}
+----
+
+=== 2. Resolving overriding conflicts
+
+Конфликты если в двух наследуемых интерфейсах одинаковая сигнатура метода - *_See:_* link:https://kotlinlang.org/docs/interfaces.html#resolving-overriding-conflicts[kotlinlang.org]
+
+=== 3.

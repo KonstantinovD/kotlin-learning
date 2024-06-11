@@ -1,0 +1,20 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  datasource:
+    url: jdbc:h2:file:C:\Users\d.m.konstantinov\DRIVE\PROJECTS\my_own_projects\embedded-db\kotlin_app
+  liquibase:
+    change-log: classpath:db/changelog.yaml
+  jpa:
+    show-sql: true
+logging:
+  level:
+    liquibase: INFO
+blog:
+  title: My Favorite Blog
+  banner:
+    title: Warning
+    content: The blog will be down tomorrow
+

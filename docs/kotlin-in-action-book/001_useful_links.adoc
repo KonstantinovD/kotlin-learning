@@ -1,0 +1,9 @@
+== Полезные ссылки под Kotlin
+
+https://developer.alexanderklimov.ru/android/kotlin/
+
+https://hyperskill.org/tracks/18
+https://www.youtube.com/playlist?list=PL6gx4Cwl9DGDPsneZWaOFg0H2wsundyGr
+https://kotlinlang.org/docs/getting-started.html#create-your-powerful-application-with-kotlin
+https://spring.io/guides/tutorials/spring-boot-kotlin - веб-приложение
+

@@ -1,0 +1,7 @@
+== Delegated properties (делегированные свойства)
+
+link:https://kotlinlang.org/docs/delegated-properties.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs030_delegated_properties/DelegatedProperties.kt[DelegatedProperties.kt]
+
+=== 1.

@@ -1,0 +1,62 @@
+== Строки в Kotlin
+
+link:https://kotlinlang.org/docs/java-to-kotlin-idioms-strings.html[link - Strings in Java and Kotlin]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs006_String_basics/StringsBasics.kt[StringsBasics.kt]
+
+=== 1. Основные операции строк/со строками
+
+- 1) Длина строки
+[source, kotlin]
+----
+val language = "Kotlin"
+println(language.length) // 6
+val empty = ""
+println(empty.length) // 0
+----
+
+- 2) Контеканация строк
+
+Когда мы складываем две строки, создается новая строка.
+[source, kotlin]
+----
+val one = "1"
+val two = "2"
+val twelve = one + two
+println(one)      // 1, no changes
+println(two)      // 2, no changes
+println(twelve)   // 12
+----
+
+- 3) Функция `repeat`
+
+Если вам нужно повторить одну строку два или более раз, вместо циклов можно использовать функцию повтора:
+[source, kotlin]
+----
+fun printLadder(times :Int) {
+    for (i in 1..times) println("#".repeat(i))
+}
+----
+
+- 4) "Сырые" строки - `"""`
+[source, kotlin]
+----
+val privileges = template.query(
+    """
+    select file
+    from files
+    where user_id = '$ADMIN_CREATOR'
+    """
+)
+----
+
+=== 2. Форматирование строк
+
+Используйте шаблоны (string templates) для вставки значений переменных в строку. Если вы хотите напечатать произвольное выражение (обратиться к члену класса, вызвать функцию и т. д.), используйте фигурные скобки `{}`:
+[source, kotlin]
+----
+val language = "Kotlin"
+println("Have a nice $language!")
+
+println("$language has ${language.length} letters in the name")
+----

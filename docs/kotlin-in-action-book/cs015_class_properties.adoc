@@ -1,0 +1,95 @@
+== Свойства классов (проперти)
+
+link:https://kotlinlang.org/docs/properties.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs015_class_properties/ClassesProperties3.kt[ClassesProperties3.kt]
+
+=== 1. Введение
+
+Полный синтаксис объявления свойства следующий:
+[source, kotlin]
+----
+var <propertyName>[: <PropertyType>] [= <property_initializer>]
+    [<getter>]
+    [<setter>]
+----
+
+Вы можете определить собственные геттеры для свойства:
+[source, kotlin]
+----
+var stringRepresentation: String
+    get() = this.toString()
+    set(value) {
+        // parses the string and assigns values
+        setDataFromString(value) // to other properties
+    }
+----
+
+Если вам нужно аннотировать сеттер или изменить его видимость, но вы не хотите менять реализацию по умолчанию, вы можете не определять его тело:
+[source, kotlin]
+----
+var setterVisibility: String = "abc"
+    private set // the setter is private
+    // and has the default implementation
+
+var setterWithAnnotation: Any? = null
+    @Inject set // annotate the setter with Inject
+----
+
+=== 2. Свойства в Kotlin - это getter/setter. Backing fields
+
+Компилятор Kotlin генерирует setter/getter для свойств. Под капотом Kotlin будет использовать поле Java для хранения значений свойств. Эти поля Java известны в Kotlin как 'backing fields' (вспомогательные поля).
+
+На самом деле все свойства в Kotlin (*_body_*, *_hasBody_*, *_statusCode_*) являются объявлениями getter-ов/setter-ов. *_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs015_class_properties/ClassesProperties3.kt[ClassesProperties3.kt]:
+[source, kotlin]
+----
+data class HttpResponse(val body: String) {
+    // нет backing property - оно не нужно
+    val hasBody: Boolean // поскольку данный геттер вызывает
+        get() = body.isNotBlank() // другой геттер - 'body'
+        // и не содержит инфы, которую нужно хранить в классе
+
+    // initializer присваивает backing field directly
+    var statusCode: Int = 100
+        set(value) {
+            if (value in 100..599)
+                field = value // правильно
+                // нельзя, потому что statusCode - это сеттер,
+                statusCode = value // и мы просто устроим рекурсию
+        }
+
+}
+----
+
+*_See:_* link:https://kotlinlang.org/docs/properties.html[kotlinlang.org], link:https://www.baeldung.com/kotlin/backing-fields[baeldung]
+
+=== 3. lateinit. Ленивая инициализация свойств и переменных
+
+Если свойство объявлено с типом без знака вопроса (не допускающее null), то компилятор будет требовать его инициализации сразу. Это не удобно в случае использования Spring. Для таких случаев существует ключевое слово `lateinit`:
+[source, kotlin]
+----
+class MyTest {
+    lateinit var subject: TestSubject
+
+    @SetUp fun setup() {
+        subject = TestSubject()
+    }
+
+    @Test fun test() {
+        subject.method()  // dereference directly
+    }
+}
+----
+Для свойств класса lateinit доступно только если оно объявлено внутри тела класса - не в основном конструкторе - и если оно не имеет переопределенных геттеров/сеттеров:
+
+
+
+Доступ к lateinit-свойству до его инициализации вызывает специальное исключение, которое четко идентифицирует доступное свойство и тот факт, что оно не было инициализировано. Для проверки, было ли инициализировано свойство, нужно использовать вызов `.isInitialized`:
+[source, kotlin]
+----
+if (foo::bar.isInitialized) {
+    println(foo.bar)
+}
+----
+
+

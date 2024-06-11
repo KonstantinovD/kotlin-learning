@@ -1,0 +1,55 @@
+== Массивы в Kotlin
+
+link:https://kotlinlang.org/docs/arrays.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs011_arrays/Arrays.kt[Arrays.kt]
+
+
+=== 1. Массивы в Kotlin. Создание массивов
+
+Массив — это структура данных, содержащая *_фиксированное количество_* (как и в Java) значений одного типа или его подтипов.
+
+Для создания массивов в Котлине можно использовать:
+
+1. Функции, такие как `arrayOf()`, `arrayOfNulls()` или `emptyArray()`.
+2. Конструктор Array.
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs011_arrays/Arrays.kt[Arrays.kt]
+
+Массивы инвариантны. Это означает, что Kotlin не позволяет назначить переменной Array<Any> переменную Array<String>.
+
+=== 2. Массивы примитивов и автоупаковка
+
+Если вы используете класс Array с примитивными значениями, эти значения помещаются в объекты. В качестве альтернативы вы можете использовать массивы примитивных типов, которые позволяют хранить примитивы в массиве без эффекта autoboxing:
+
+- BooleanArray - эквивалент boolean[] в Java
+- ByteArray - эквивалент byte[] в Java
+- CharArray - эквивалент char[] в Java
+- DoubleArray - эквивалент double[] в Java
+- FloatArray - эквивалент float[] в Java
+- IntArray - эквивалент int[] в Java
+- LongArray - эквивалент long[] в Java
+- ShortArray - эквивалент short[] в Java
+[source, kotlin]
+----
+val exampleArray = IntArray(5)
+println(exampleArray.joinToString())
+// 0, 0, 0, 0, 0
+----
+
+=== 3. Трансформация массивов
+
+Для массивов доступно суммирование и перемешивание элементов с помощью функций `sum()` и `shuffle()`.
+
+Массивы можно конвертировать в коллекции - `toSet()`/`toList()`.
+
+Конвертация в Map возможна только массива пар `Pair<K,V>`. Причем более "ранние" ключи перезапишутся более "поздними":
+[source, kotlin]
+----
+val pairArray = arrayOf("apple" to 120, "banana" to 150, "cherry" to 90, "apple" to 140)
+
+// The keys are fruits and the values are their number of calories
+// Note how keys must be unique, so the latest value of "apple" overwrites the first
+println(pairArray.toMap()) // {apple=140, banana=150, cherry=90}
+----
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs011_arrays/Arrays.kt[Arrays.kt]

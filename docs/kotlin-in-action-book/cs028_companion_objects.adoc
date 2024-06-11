@@ -1,0 +1,80 @@
+== Companion objects
+
+link:https://kotlinlang.org/docs/object-declarations.html[kotlinlang.org], link:https://developer.alexanderklimov.ru/android/kotlin/companion.php[alexanderklimov]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs028_companion_objects/CompanionObjects.kt[CompanionObjects.kt]
+
+=== 1. Companion objects (сопутствующие объекты)
+
+Классы в Kotlin не могут иметь статических членов, ключевое слово static не входит в состав языка.
+
+Можно пометить *_object_* в классе ключевым словом *_companion_* вместе с другим ключевым словом  и обращаться к методам и свойствам объекта через имя содержащего его класса без явного указания имени объекта.
+
+Объект-компаньон имеет доступ ко всем членам класса и подходит для реализации шаблона "Фабрика" либо для статических переменных.
+
+[source, kotlin]
+----
+open class Gun(val model: String,
+               var pistols: Int, var side: String) {
+    fun fire() {/* ... */}
+}
+
+class MachineGun(mod: String, pistols: Int, side: String)
+    : Gun(mod, pistols, side) {
+    companion object Factory {
+        fun create(name: String = "DP-27") {/* ... */}
+    }
+}
+
+class SubmachineGun(mod: String, pistols: Int, side: String)
+    : Gun(mod, pistols, side) {
+    // объект-компаньон без имени имеет имя 'Companion'
+    companion object {
+        fun create(name: String = "PPSh-41") {/* ... */}
+    }
+}
+
+fun main() {
+    // создать объект фабрикой
+    val mgInstance = MachineGun.create()
+    // объект фабрики
+    val mgFactory = MachineGun.Factory
+    // объект фабрики можно получить, просто вызвав класс,
+    // имеющий компаньон, т.к. компаньон может быть только 1
+    val mgFactory2 = MachineGun
+
+    // создать объект фабрикой
+    val smgInstance = SubmachineGun.create()
+    // объект-компаньон без имени
+    val smgFactory = SubmachineGun.Companion
+    // объект фабрики
+    val smgFactory2 = SubmachineGun
+
+    var guns = listOf(
+        mgInstance,
+        mgFactory.create("MG-34"),
+        mgFactory2.create("DSHK"),
+        smgInstance,
+        smgFactory.create("PPS-43"),
+        smgFactory2.create("MP-40")
+    )
+
+    guns.forEach(Gun::fire)
+}
+----
+
+Хотя объекты-компаньон выглядят как статические члены в других языках, во время выполнения они по-прежнему являются членами экземпляров реальных объектов и могут, например, реализовывать интерфейсы или классы:
+[source, kotlin]
+----
+interface Factory<T> {
+    fun create(): T
+}
+
+class MyClass {
+    companion object : Factory<MyClass> {
+        override fun create(): MyClass = MyClass()
+    }
+}
+
+val f: Factory<MyClass> = MyClass
+----

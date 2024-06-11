@@ -1,0 +1,68 @@
+== Exceptions in Kotlin
+
+link:https://kotlinlang.org/docs/exceptions.html[kotlinlang.org]
+
+=== 1. Введение. Try-catch-finally. Try - выражение
+
+Все классы исключений в Kotlin наследуют класс Throwable. Каждое исключение имеет message, stack trace и необязательную cause.
+
+Чтобы создать объект исключения, используйте выражение throw:
+
+[source, kotlin]
+----
+throw Exception("Hi There!")
+----
+
+Чтобы отловить исключение, используется try-catch-finally. Как и в Java, finally-блок исполняется всегда:
+[source, kotlin]
+----
+try {
+    // some code
+} catch (e: SomeException) {
+    // handler
+} finally {
+    // optional finally block
+}
+----
+
+К слову, keyword `try` является выражением:
+[source, kotlin]
+----
+val a: Int? = try {
+    input.toInt()
+} catch (e: NumberFormatException) {
+    null
+}
+----
+
+=== 2. Kotlin не имеет checked exception
+
+Проверяемые исключения были ошибкой в Java. Если вы хотите предупредить вызывающих абонентов о возможных исключениях при вызове кода Kotlin из Java, вы можете использовать аннотацию *_@Throws_* +
+См. все исключения в файле TypeAliases.kt
+
+=== 3. Тип 'Nothing'
+
+*_throw_* - это выражение в Kotlin, поэтому вы можете использовать его, например, как часть выражения elvis:
+[source, kotlin]
+----
+try {
+    // если name == null, то выкинется исключение
+    val s = person.name ?: throw IllegalArgumentException("Name required")
+    println(s)
+} catch (e : Exception) {
+    println(e.message)
+}
+----
+
+Выражение throw имеет тип *_Nothing_*. Этот тип не имеет значений и используется для обозначения мест кода, до которых невозможно добраться. В своем собственном коде вы можете использовать Nothing функцию, которая никогда не возвращает результат:
+[source, kotlin]
+----
+fun fail(message: String): Nothing {
+    throw IllegalArgumentException(message)
+}
+----
+
+Вы также можете столкнуться с Nothing при выводе типа. Вариант этого типа, допускающий значение NULL Nothing?, имеет ровно одно возможное значение: null. Если вы используете nullдля инициализации значения выведенного типа и нет другой информации, которую можно было бы использовать для определения более конкретного типа, компилятор выведет тип Nothing?:
+
+
+

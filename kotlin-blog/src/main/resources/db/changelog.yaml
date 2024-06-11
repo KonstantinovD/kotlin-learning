@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: changeset_default_name
+      author: KonstantinovD
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: items
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: numeric
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: users_pk
+              - column:
+                  name: login
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: firstname
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastname
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+        - createSequence:
+            sequenceName: s_users
+        - addDefaultValue:
+            tableName: users
+            columnName: id
+            defaultValueSequenceNext: s_users
+        - addUniqueConstraint:
+            columnNames: login
+            constraintName: users_u1
+            tableName: users
+        - createTable:
+            tableName: articles
+            columns:
+              - column:
+                  name: id
+                  type: numeric
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: articles_pk
+              - column:
+                  name: author_id
+                  type: numeric
+              - column:
+                  name: title
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: slug
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: headline
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: varchar(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: added_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createSequence:
+            sequenceName: s_articles
+        - addDefaultValue:
+            tableName: articles
+            columnName: id
+            defaultValueSequenceNext: s_articles
+        - addForeignKeyConstraint:
+            constraintName: articles_fk1
+            baseColumnNames: author_id
+            baseTableName: articles
+            referencedColumnNames: id
+            referencedTableName: users

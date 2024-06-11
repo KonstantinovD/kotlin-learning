@@ -1,0 +1,129 @@
+== Scope functions
+
+link:https://kotlinlang.org/docs/scope-functions.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs018_scope_functions/ScopeFunstions.kt[ScopeFunstions.kt]
+
+=== 1. Введение и примеры
+
+Стандартная библиотека Kotlin содержит несколько функций, целью которых является выполнение блока кода в контексте объекта. При вызове функции для объекта с предоставленным лямбда-выражением, она формирует временную область видимости. В этой области вы можете получить доступ к объекту без его имени. Такие функции называются функциями области видимости. Их пять: `let`, `run`, `with`, `apply` и `also`. Кроме того, есть библиотечные функции области видимости `takeIf` и `takeUnless`.
+
+Все функции выполняют блок кода над объектом, отличаясь лишь тем, как объект становится доступен внутри блока кода и какой результат у всего выражения.
+
+Пример использования функции *_let_*:
+[source, kotlin]
+----
+Person("Alice", 20, "Amsterdam").let {
+    println(it)
+    it.moveTo("London")
+    it.incrementAge()
+    println(it)
+}
+----
+Без этого пришлось бы писать следующим образом:
+[source, kotlin]
+----
+val alice = Person("Alice", 20, "Amsterdam")
+println(alice)
+alice.moveTo("London")
+alice.incrementAge()
+println(alice)
+----
+*_Scope functions не привносят никаких новых технических возможностей, но могут сделать ваш код более кратким и читабельным_*.
+
+=== 2. This и It. Функции расширения
+
+Несмотря на путаницу по поводу назначения this/it - это все ссылки на объекты, просто один функции используют одно слово, другие - другое. *_This_* используют `run`, `with`, `apply`; it - `let`, `also`. +
+Что еще важно - *_this_* будет перекрывать *_'this'_* из внешней области, т. е. если мы, например, выполняем лямбду внутри функции какого-то класса, то, используя scope function 'this', мы не сможем получить доступ к текущему экземпляру данного класса через 'this':
+[source, kotlin]
+----
+class ThisSample(var cnt: Int = 0) {
+    fun count(elems: List<String>) : Int {
+        elems.apply { // используется 'this' для доступа
+            // нельзя вызвать this.cnt
+            print("Передан массив: $this")
+        }
+        return elems.also { // используется 'it' для доступа
+            this.cnt++
+            println(", Еще раз: $it")
+        }.count()
+    }
+}
+----
+
+Также некоторые из этих функций являются функциями расширения -  `apply`, `let`, `also`, `run` при вызове на объекте, а такие как `with`, `run` при вызове без объекта - не являются.
+
+=== 3. Таблица функций
+
+[cols="1,1,2,4"]
+|===
+|FUNCTION
+|OBJECT REFERENCE
+|RETURN VALUE
+|IS EXTENSION FUNCTION
+
+|*_let_*
+|it
+|Lambda result
+|Yes
+
+|*_run_*
+|this
+|Lambda result
+|Yes
+
+|*_run_*
+|-
+|Lambda result
+|No: called without the context object
+
+|*_with_*
+|this
+|Lambda result
+|No: takes the context object as an argument.
+
+|*_apply_*
+|this
+|Context object
+|Yes
+
+|*_also_*
+|it
+|Context object
+|Yes
+
+|*_takeIf_*
+|it
+|Context object
+|Yes
+
+|*_takeUnless_*
+|it
+|Context object
+|Yes
+|===
+
+=== 4. let
+
+=== 5. with
+Особенность - вызывается с аргументом. НЕ функция расширения. Пример использования функции для маппинга:
+[source, kotlin]
+----
+val userDetails = usersList.map { user ->
+    with(user) {
+        val resUser = User.withUsername(name)
+            .password(password)
+            .build()
+        rolesService.fillUserRoles(resUser)
+        resUser
+    }
+}
+----
+
+=== 6. run
+
+=== 7. apply
+
+=== 8. also
+
+=== 9. takeIf/takeUnless

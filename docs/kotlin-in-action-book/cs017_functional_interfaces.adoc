@@ -1,0 +1,44 @@
+== Функциональные (SAM) интерфейсы (Single Abstract Method)
+
+link:https://kotlinlang.org/docs/interfaces.html[kotlinlang.org]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs016_interfaces/InterfacesSample4.kt[InterfacesSample4.kt]
+
+=== 1. SAM-преобразование лямбды
+
+Интерфейс только с одним абстрактным методом называется функциональным интерфейсом. Функциональный интерфейс может иметь несколько неабстрактных членов, но только один абстрактный член. +
+Чтобы объявить функциональный интерфейс в Kotlin, используйте модификатор fun:
+[source, kotlin]
+----
+fun interface KRunnable {
+   fun invoke()
+}
+----
+
+Для функциональных интерфейсов в Kotlin вы можете использовать преобразования SAM, которые помогут сделать ваш код более кратким и читаемым за счет использования лямбда-выражений. С помощью преобразования SAM Kotlin может преобразовать любое лямбда-выражение, соответствующее сигнатуре единственного метода интерфейса, в код, который динамически создает экземпляр реализации интерфейса.
+
+Например, рассмотрим следующий функциональный интерфейс Kotlin:
+[source, kotlin]
+----
+fun interface IntPredicate {
+   fun accept(i: Int): Boolean
+}
+----
+
+Если вы не используете преобразование SAM, вам нужно будет написать такой код:
+[source, kotlin]
+----
+// Creating an instance of a class
+val isEven = object : IntPredicate {
+   override fun accept(i: Int): Boolean {
+       return i % 2 == 0
+   }
+}
+----
+Используя преобразование SAM в Kotlin, вы можете вместо этого написать следующий эквивалентный код:
+[source, kotlin]
+----
+// Creating an instance using lambda
+val isEven = IntPredicate { it % 2 == 0 }
+----
+

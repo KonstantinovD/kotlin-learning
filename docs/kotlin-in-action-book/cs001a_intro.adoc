@@ -1,0 +1,140 @@
+== Введение в Kotlin
+
+=== 1. Kotlin и Java
+
+- Kotlin, как и Java - статически типизируемый язык. Поддержка выводимости типов (как var).
+- Классы, интерфейсы и обобщенные типы работают практически так же, как и в Java.
+- Важное нововведение - поддержка типов, допускающих значение null (nullable types) - например, `Int?`.
+- Еще одно нововведение - поддержка *_функциональных типов_* (functional types).
+
+==== Преимущества Kotlin над Java:
+
+1) *_Краткость_*: Kotlin сводит к минимуму шаблонный код, в результате чего для достижения той же функциональности требуется меньше строк кода. Например, классы данных в Kotlin автоматически генерируют методы *_equals()_*, *_hashCode()_* и *_toString()_*:
+[source, kotlin]
+----
+data class User(val name: String, val age: Int)
+----
+
+2) *_Выразительность_*: синтаксис Kotlin позволяет писать более читаемый и понятный код. Например, выражение *when* — это более мощная версия *switch*:
+[source, kotlin]
+----
+when (x) {
+    1 -> print("x == 1")
+    2 -> print("x == 2")
+    else -> print("x is neither 1 nor 2")
+}
+----
+
+3) *_Совместимость с Java_*: Kotlin полностью совместим с Java. Это значит, что вы можете легко вызывать код Kotlin из Java или код Java из Kotlin:
+
+[source, kotlin]
+----
+// Kotlin function
+fun getList(): List<String> = listOf("Kotlin", "Java")
+
+// Java code calling the Kotlin function
+List<String> list = MyKotlinFile.getList();
+----
+
+=== 2. Basic Syntax and Concepts in Kotlin
+
+Kotlin — это статически типизированный язык программирования, работающий на виртуальной машине Java (JVM). Он разработан для полной совместимости с Java, обеспечивая при этом более краткий синтаксис и улучшенные функции.
+
+==== Variables
+
+В Kotlin используется ключевое слово *val* для объявления неизменяемых переменных и *var* для изменяемых:
+[source, kotlin]
+----
+// Immutable variable
+val immutableString: String = "Hello"
+// Mutable variable
+var mutableInt: Int = 42
+----
+
+Кроме того, существует ключевое слово *const val*. От *val* отличается тем, что значение переменной должно быть присвоено на этапе компиляции, не в рантайме. Т. е. такой переменной присваиваются только литералы - числа, символы и строки:
+
+[source, kotlin]
+----
+// Constant should be assigned at compile time
+const val CONST_INT = 127
+const val CONST_DOUBLE = 3.14
+const val CONST_CHAR = 'c'
+const val CONST_STRING = "I am constant"
+// error: only primitives and strings are allowed
+const val CONST_ARRAY = arrayOf(1, 2, 3)
+----
+
+==== Data Types
+
+Kotlin содержит встроенные типы данных, такие как Int, Double, Float, Boolean и т. д. Он автоматически определяет тип переменной, если он не указан явно.
+[source, kotlin]
+----
+val inferredType = 42 // Int inferred
+----
+
+==== Operators
+
+Котлин использует операторы, аналогичные Java, например +, -, *, / и %. Он также поддерживает перегрузку операторов.
+
+==== Поток управления (control flow) - Циклы
+
+В Kotlin вы можете использовать оператор *_if_* в качестве выражения, что является улучшением по сравнению с _if_ в Java. *_See:_* *_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs004_if_else_operator/IfElseOperator.kt[IfElseOperator.kt]:
+[source, kotlin]
+----
+val max = if (a > b) a else b
+----
+
+Циклы в Kotlin похожи на Java, но с улучшениями. Цикл for более эффективен благодаря range operator `..`:
+[source, kotlin]
+----
+for (i in 1..10) {
+    println(i)
+}
+----
+Циклы while и do.. while функционируют аналогично циклам в Java.
+
+В Котлине есть выражение *_when_*, расширенная форма *_switch-case_*, поддерживающая произвольные выражения. Если switch требует использования констант в блоках case констант (enum, строковые/числовые константы), when разрешает использовать произвольные выражения - *_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs001/ColorWhenMain.kt[ColorWhenMain.kt]:
+[source, kotlin]
+----
+fun main() {
+    println(mix(Color.RED, Color.YELLOW))
+    println(mixNonOptimized(Color.BLUE, Color.VIOLET))
+}
+
+fun mix(c1: Color, c2: Color): Color {
+    return when { // when без агрументов
+        (c1 == Color.RED && c2 == Color.YELLOW)
+                || (c1 == Color.YELLOW && c2 == Color.RED) -> Color.ORANGE
+        (c1 == Color.YELLOW && c2 == Color.BLUE)
+                || (c1 == Color.BLUE && c2 == Color.YELLOW) -> Color.GREEN
+        (c1 == Color.BLUE && c2 == Color.VIOLET)
+                || (c1 == Color.VIOLET && c2 == Color.BLUE) -> Color.INDIGO
+        else -> throw Exception("Грязный цвет")
+    }
+}
+
+// не оч оптимально, т. к. вызов функции создает 1-2-3 сета
+// но зато показательно с точки зрения произвольных выражений
+fun mixNonOptimized(c1: Color, c2: Color) =
+    when (setOf(c1, c2)) {
+        setOf(Color.RED, Color.YELLOW) -> Color.ORANGE
+        setOf(Color.YELLOW, Color.BLUE) -> Color.GREEN
+        setOf(Color.BLUE, Color.VIOLET) -> Color.INDIGO
+        else -> throw Exception("Грязный цвет")
+    }
+----
+
+Можно вообще арифметические выражения писать:
+[source, kotlin]
+----
+when {
+    number < 0 -> println("Negative number")
+    number in 1..10 -> println("Number between 1 and 10")
+    number % 2 == 0 -> println("Even number")
+    else -> println("Odd number greater than 10")
+}
+----
+
+=== Улучшения по сравнению с Java
+
+Синтаксис Kotlin более краток, что позволяет сократить количество шаблонного кода. Например, вам не нужно использовать точку с запятой в конце каждого оператора. Ключевое слово when более гибко, чем switch-case, а выражение if в Котлине можно использовать в качестве выражения, что устраняет необходимость в тернарном операторе. Важная фича - безопасность типов, допускающих null. Это позволяет избавиться от проверок на null и многих случаев NPE.

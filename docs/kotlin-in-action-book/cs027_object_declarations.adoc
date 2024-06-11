@@ -1,0 +1,67 @@
+== Object declarations. Singletons
+
+link:https://kotlinlang.org/docs/object-declarations.html[kotlinlang.org], link:https://developer.alexanderklimov.ru/android/kotlin/object.php[alexanderklimov]
+
+*_See:_* link:../../kotlin-basics/src/main/kotlin/common/cs027_object_declarations/ObjectDeclarations.kt[ObjectDeclarations.kt]
+
+=== 1. Object declarations - объявления объектов. For withIndex()
+
+Шаблон Singleton может быть полезен в нескольких случаях, а Kotlin позволяет легко объявлять синглтоны:
+[source, kotlin]
+----
+object Arsenal {
+    val weapons = mutableListOf<Weapon>()
+
+    fun addWeapon(weapon : Weapon) {
+        weapons.add(weapon)
+    }
+
+    fun getWeapon(weapon : Weapon) : Weapon? {
+        // вариант цикла - более лаконичный
+        for ((index, value) in weapons.withIndex()) {
+            if (value.equals(weapon)) {
+                weapons.removeAt(index)
+                return value
+            }
+        }
+        return null
+    }
+
+    fun listWeapons() {
+        println("All weapons in arsenal: ${weapons}")
+    }
+}
+----
+
+Это называется *_object declaration_* - объявление объекта, - и его имя всегда следует за ключевым словом *_object_*. Как и объявление переменной, объявление объекта не является выражением, и его нельзя использовать в правой части оператора присваивания. Вы можете задавать свойства, методы, блоки инициализации, но не можете создавать конструкторы (как основные, так и вторичные).
+
+Инициализация объявления объекта является потокобезопасной и выполняется при первом доступе. Чтобы обратиться к объекту, используйте его имя напрямую:
+[source, kotlin]
+----
+Arsenal.addWeapon(Weapon(PP_19))
+Arsenal.addWeapon(Weapon(SKS))
+Arsenal.listWeapons()
+
+Arsenal.getWeapon(Weapon(MOSIN_NAGAN))?.fire()
+Arsenal.getWeapon(Weapon(PP_19))?.fire()
+Arsenal.listWeapons()
+----
+
+Такие объекты зачастую используются для utility классов и классов констант. Также объекты могут иметь супертипы.
+[source, kotlin]
+----
+object WeaponConstants { // можно использовать как класс утилит
+    const val PP_19 =  "PP-19 Vityaz"
+    const val AK_74 =  "AK-74"
+    const val MOSIN_NAGAN =  "Mosin-Nagan"
+    const val SKS =  "SKS"
+}
+----
+
+=== 2. Data objects - доступны с kotlin 1.9
+
+Как и в случае с data classes, вы можете пометить ключевое слово *_object_* модификатором *_data_*. Компилятор сгенерирует для вашего объекта следующие функции: `toString()` , `equals()`/`hashCode()`. Но нет функций `copy()` и `componentN()`.
+
+Функция *_equals()_* гарантирует, что все объекты, которые имеют тип анонимного объекта, равны. Обычно вы имеете ровно один data-объект, за исключением создания такого объекта в рантайме, например, с помощью Java-рефлексии.
+
+Data objects доступны с kotlin 1.9. В данном проекте Kotlin 1.6.
